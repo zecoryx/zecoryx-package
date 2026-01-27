@@ -1,59 +1,65 @@
 # ⚡ Zecoryx CLI - Professional Project Generator
 
 This CLI tool helps you create professional React and Next.js projects in seconds. Developed by Lazizbek Abdullayev (zecoryx).
+# 🚀 Zecoryx CLI
 
-## ✨ Features
+**Zecoryx CLI** is a powerful, professional-grade scaffolding tool designed to jumpstart your modern web development workflow. Whether you're building a lightweight React app or an enterprise-scale Next.js application, Zecoryx has you covered.
 
-- 🚀 **Frameworks:** Integration for React (Vite) and Next.js (App Router).
-- 🔐 **Authentication:** Ready-to-use setup for Clerk, Supabase, and Firebase.
-- 🎨 **UI Libraries:** Tailwind CSS v4 and Chakra UI v3 integration.
-- 🧭 **Routing:** Automatic configuration for React Router Dom (for Vite projects).
-- 📦 **State Management:** Optional Zustand integration.
-- 🌐 **API:** Pre-configured Axios setup.
-- 🔔 **Notifications:** Support for react-toastify or sonner.
-- 📁 **Structure:** Choose between ZCS (Zecoryx Custom Structure) or Classic structure.
-- ⚙️ **Configuration:** Automatic generation of `.env`, `.env.example`, and `git init`.
-- 💎 **Visual:** Beautiful ASCII Art logo and colored interface.
-- 🔄 **Update Checker:** Notifies you when new versions are available.
+## ✨ Key Features
+
+- 🏗️ **Framework Support:** Choose between **React (Vite)** and **Next.js (App Router)**.
+- 🎨 **UI Libraries:** Support for **Tailwind CSS v4** and **Chakra UI v3**. Switch between them seamlessly.
+- 🔐 **First-Class Auth:** Built-in support for **Clerk**, **Supabase**, and **Firebase**.
+- 🛠️ **Developer Experience:**
+  - **Icons:** Choose between `react-icons` and `lucide-react`.
+  - **State Management:** Integrated `Zustand` setup.
+  - **Networking:** Pre-configured `Axios` instance.
+  - **Notifications:** Integrated `Sonner` or `React-Toastify`.
+- 📂 **Flexible Structure:** Choose between **ZCS (Zecoryx Component System)** for organized architecture or **Classic** for simpler projects.
+- 💎 **Visual Excellence:** A beautiful command-line interface with ASCII art and clear, colored logging.
+- 🔄 **Update Checker:** Automatically stay up-to-date with the latest features.
+
+---
 
 ## 🚀 Quick Start
 
-You don't even need to install it! Just run:
+No installation required! Simply run:
 
 ```bash
 npx zecoryx-cli
 ```
 
-### Or Installation & Usage
-
-If you prefer to install it globally:
+### Alternatively, Install Globally
 
 ```bash
 npm install -g zecoryx-cli
 zecoryx
 ```
 
-### Manual Installation (for development):
+### For Development
 
-Clone the project and install dependencies:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/zecoryx/zecoryx-tools.git
+    cd zecoryx-tools
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Run in dev mode:**
+    ```bash
+    npm run dev
+    ```
 
-## 📂 Project Structure (ZCS)
+---
 
-When ZCS structure is selected, your project will look like this:
+## 📂 Project Structures
 
+### ZCS (Zecoryx Component System)
+Designed for scalability and maintainability:
 ```text
 src/
-├── assets/         # Images and fonts
-├── components/     # UI components
-│   └── common/     # Shared/Global components
-├── hooks/          # Custom hooks
-├── pages/          # Page components
-├── services/       # API services (Axios)
-├── store/          # Global state (Zustand)
-├── utils/          # Utility functions
-└── main.tsx        # Entry point
-```
-
 ## 🛠 Technologies used
 
 - [Node.js](https://nodejs.org/)

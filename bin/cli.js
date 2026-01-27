@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { main } from '../src/main.js';

@@ -39,14 +39,16 @@ export class ProjectGenerator {
 
     try {
       if (this.options.projectType === 'next') {
-        spinner.text = `Initialising Next.js project: ${chalk.cyan(this.options.projectName)}`;
+        spinner.stop();
+        console.log(`\n🚀 Initialising Next.js project: ${chalk.cyan(this.options.projectName)}`);
         await this.createNextProject();
       } else {
-        spinner.text = `Initialising Vite project: ${chalk.cyan(this.options.projectName)}`;
+        spinner.stop();
+        console.log(`\n🚀 Initialising Vite project: ${chalk.cyan(this.options.projectName)}`);
         await this.createViteProject();
       }
 
-      spinner.text = "Installing additional dependencies...";
+      spinner.start("Installing additional dependencies...");
       await this.installDependencies();
 
       spinner.text = "Configuring project files...";
@@ -74,7 +76,13 @@ export class ProjectGenerator {
     const { projectName, language } = this.options;
     const template = language === 'ts' ? 'react-ts' : 'react';
 
-    await execa("npm", ["init", "vite@latest", projectName, "--", "--template", template], { stdio: "inherit" });
+    // Use npx and pass --template to avoid prompts.
+    // Adding --yes or similar if available, but for create-vite,
+    // usually passing all arguments is enough unless there's an existing dir.
+    await execa("npx", ["create-vite@latest", projectName, "--template", template], {
+      stdio: "inherit",
+      env: { ...process.env, NPM_CONFIG_YES: "true" } // Try to bypass some prompts
+    });
 
     if (this.options.structure) {
       const templatePath = path.join(__dirname, "templates", this.options.structure.toLowerCase());
@@ -97,7 +105,8 @@ export class ProjectGenerator {
       "--src-dir",
       language === 'ts' ? "--ts" : "--js",
       "--import-alias", "@/*",
-      "--no-turbopack"
+      "--no-turbopack",
+      "--yes" // Very important for create-next-app
     ];
 
     await execa("npx", args, { stdio: "inherit" });
@@ -176,7 +185,8 @@ export class ProjectGenerator {
       else if (notification === "sonner") dependencies.push("sonner");
     }
 
-    if (icons) dependencies.push("react-icons");
+    if (icons === 'React Icons') dependencies.push("react-icons");
+    else if (icons === 'Lucide React') dependencies.push("lucide-react");
     if (stateManagement) dependencies.push("zustand");
     if (axios) dependencies.push("axios");
 

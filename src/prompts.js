@@ -47,10 +47,11 @@ export const getPrompts = async () => {
       when: answers => answers.projectType === 'vite'
     },
     {
-      type: 'confirm',
+      type: 'list',
       name: 'icons',
-      message: 'Add React Icons?',
-      default: true
+      message: 'Choose Icon library:',
+      choices: ['React Icons', 'Lucide React', 'None'],
+      default: 'React Icons'
     },
     {
       type: 'list',
