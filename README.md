@@ -1,70 +1,69 @@
-# ⚡ Zecoryx React Vite project generator
+# ⚡ Zecoryx CLI - Professional Project Generator
 
-Ushbu CLI vositasi professional React loyihalarini bir necha soniya ichida yaratishga yordam beradi. Lazizbek Abdullayev (zecoryx) tomonidan ishlab chiqilgan.
+This CLI tool helps you create professional React and Next.js projects in seconds. Developed by Lazizbek Abdullayev (zecoryx).
 
-## ✨ Xususiyatlari
+## ✨ Features
 
-- 🚀 **Frameworklar:** React (Vite) va Next.js (App Router) integratsiyasi.
-- 🔐 **Authentication:** Clerk, Supabase va Firebase uchun tayyor setup.
-- 🎨 **UI Kutubxonalar:** Tailwind CSS v4 va Chakra UI v3 integratsiyasi.
-- 🧭 **Routing:** React Router Dom (Vite uchun) avtomatik sozlanishi.
-- 📦 **State Management:** Zustand qo'shish imkoniyati.
-- 🌐 **API:** Axios setupi.
-- 🔔 **Notifications:** react-toastify yoki sonner.
-- 📁 **Struktura:** ZCS (Zecoryx Custom Structure) yoki Classic strukturani tanlash.
-- ⚙️ **Konfiguratsiya:** `.env`, `.env.example`, `git init` avtomatik yaratiladi.
-- 💎 **Visual:** Chiroyli ASCII Art va rangli interfeys.
-- 🔄 **Update Checker:** Yangi versiyalar haqida eslatma.
+- 🚀 **Frameworks:** Integration for React (Vite) and Next.js (App Router).
+- 🔐 **Authentication:** Ready-to-use setup for Clerk, Supabase, and Firebase.
+- 🎨 **UI Libraries:** Tailwind CSS v4 and Chakra UI v3 integration.
+- 🧭 **Routing:** Automatic configuration for React Router Dom (for Vite projects).
+- 📦 **State Management:** Optional Zustand integration.
+- 🌐 **API:** Pre-configured Axios setup.
+- 🔔 **Notifications:** Support for react-toastify or sonner.
+- 📁 **Structure:** Choose between ZCS (Zecoryx Custom Structure) or Classic structure.
+- ⚙️ **Configuration:** Automatic generation of `.env`, `.env.example`, and `git init`.
+- 💎 **Visual:** Beautiful ASCII Art logo and colored interface.
+- 🔄 **Update Checker:** Notifies you when new versions are available.
 
-## 🚀 O'rnatish va Ishlatish
+## 🚀 Quick Start
 
-Loyihani klon qiling va dependency'larni o'rnating:
+You don't even need to install it! Just run:
 
 ```bash
-git clone https://github.com/zecoryx/zecoryx-tools.git
-cd zecoryx-tools
-npm install
+npx zecoryx-cli
 ```
 
-### CLI ni ishga tushirish:
+### Or Installation & Usage
+
+If you prefer to install it globally:
 
 ```bash
-npm start
-```
-
-Yoki global o'rnatish uchun:
-
-```bash
-npm link
+npm install -g zecoryx-cli
 zecoryx
 ```
 
-## 📂 Loyiha Strukturasi (ZCS)
+### Manual Installation (for development):
 
-ZCS strukturasi tanlanganda loyiha quyidagicha ko'rinishga ega bo'ladi:
+Clone the project and install dependencies:
+
+## 📂 Project Structure (ZCS)
+
+When ZCS structure is selected, your project will look like this:
 
 ```text
 src/
-├── assets/         # Rasmlar va shriftlar
-├── components/     # UI komponentlar
-│   └── common/     # Umumiy komponentlar
+├── assets/         # Images and fonts
+├── components/     # UI components
+│   └── common/     # Shared/Global components
 ├── hooks/          # Custom hooks
-├── pages/          # Sahifalar
+├── pages/          # Page components
 ├── services/       # API services (Axios)
 ├── store/          # Global state (Zustand)
-├── utils/          # Yordamchi funksiyalar
-└── main.tsx        # Kirish fayli
+├── utils/          # Utility functions
+└── main.tsx        # Entry point
 ```
 
-## 🛠 Texnologiyalar
+## 🛠 Technologies used
 
 - [Node.js](https://nodejs.org/)
-- [Chalk](https://www.npmjs.com/package/chalk) - CLI ranglari uchun.
-- [Inquirer](https://www.npmjs.com/package/inquirer) - Interaktiv savollar uchun.
-- [Execa](https://www.npmjs.com/package/execa) - Komandalarni bajarish uchun.
-- [Ora](https://www.npmjs.com/package/ora) - Spinnerlar uchun.
+- [Chalk](https://www.npmjs.com/package/chalk) - For CLI colors.
+- [Inquirer](https://www.npmjs.com/package/inquirer) - For interactive prompts.
+- [Execa](https://www.npmjs.com/package/execa) - For executing commands.
+- [Ora](https://www.npmjs.com/package/ora) - For spinners.
+- [Figlet](https://www.npmjs.com/package/figlet) - For ASCII art.
 
-## 👨‍💻 Muallif
+## 👨‍💻 Author
 
 **Lazizbek Abdullayev (Zecoryx)**
 - Portfolio: [zecoryx.uz](https://zecoryx.uz)
@@ -73,4 +72,4 @@ src/
 
 ---
 
-"Dasturlash - bu san'at, biz esa uning rassomimiz." - **Zecoryx**
+"Programming is an art, and we are the artists." - **Zecoryx**

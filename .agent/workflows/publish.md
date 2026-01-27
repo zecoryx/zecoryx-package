@@ -16,17 +16,41 @@ Loyihangizni npm da yangilash uchun quyidagi qadamlarni bajaring:
    Siz allaqachon `package.json` da versiyani `1.1.3` ga o'zgartirdingiz. Bu juda yaxshi.
 
 3. **Nashr qilish (Publish):**
-   Terminalda quyidagi buyruqni bering:
+   Avval tizimga kirganingizni tekshiring:
    ```bash
-   npm publish
+   npm whoami
    ```
-   *Sizdan 2FA (Two-Factor Authentication) kodi so'raladi. Authenticator ilovangizdagi yoki emailingizga kelgan 6 xonali kodni kiriting.*
+   *(Bu sizning username'ingizni chiqarishi kerak. Agar xato bersa, `npm login` qiling).*
 
-   Agar avtomatik so'ramasa, mana bunday urinib ko'ring:
+   Keyin nashr qiling:
    ```bash
-   npm publish --otp=XXXXXX
+   npm publish --otp=123456
    ```
-   *(Bu yerda XXXXXX - sizning 2FA kodingiz)*
+   *Eslatma: OTP kodi faqat 6 ta raqamdan iborat bo'lishi kerak. Uni Google Authenticator ilovasidan oling.*
+
+### 403 Forbidden xatosi davom etsa:
+1. **Kod muddati:** OTP kodlari juda tez (30 soniya) eskiradi. Yangi kod chiqqan zahoti tezda terminalga yozing.
+2. **Clock Desync:** Telefoningiz va kompyuteringizdagi soat (`vakt`) bir xil va aniq ekanligini tekshiring. 1-2 soniya farq ham kodni rad etishiga sabab bo'ladi.
+3. **Recovery Codes ishlamaydi:** Siz 8 xonali recovery kod emas, aynan 6 xonali OTP kodini ishlatishingiz kerak.
+
+# GitHub ga push qilish
+
+Agar kodlarni GitHub da saqlamoqchi bo'lsangiz, quyidagi komandalar ketma-ketligini terminalda ishlating:
+
+1. **Git ni sozlash:**
+   ```bash
+   git init
+   git add .
+   git commit -m "v1.1.3: Next.js va Authentication qo'shildi"
+   ```
+
+2. **GitHub repoga bog'lash:**
+   *(GitHub da yangi repo oching va uning linkini pastdagiga almashtiring)*
+   ```bash
+   git remote add origin https://github.com/zecoryx/zecoryx-tools.git
+   git branch -M main
+   git push -u origin main
+   ```
 
 4. **Agar bu scoped package bo'lsa (masalan @zecoryx/tools):**
    ```bash
