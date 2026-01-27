@@ -20,6 +20,13 @@ Loyihangizni npm da yangilash uchun quyidagi qadamlarni bajaring:
    ```bash
    npm publish
    ```
+   *Sizdan 2FA (Two-Factor Authentication) kodi so'raladi. Authenticator ilovangizdagi yoki emailingizga kelgan 6 xonali kodni kiriting.*
+
+   Agar avtomatik so'ramasa, mana bunday urinib ko'ring:
+   ```bash
+   npm publish --otp=XXXXXX
+   ```
+   *(Bu yerda XXXXXX - sizning 2FA kodingiz)*
 
 4. **Agar bu scoped package bo'lsa (masalan @zecoryx/tools):**
    ```bash
