@@ -15,21 +15,17 @@ const AUTHOR = {
   portfolio: "https://zecoryx.uz",
   github: "https://github.com/zecoryx",
   telegram: "https://t.me/zecoryx",
-  kwork: "https://kwork.ru/user/zecoryx",
 };
 
 const META_TAGS = `
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Professional React application built with Vite by Zecoryx" />
+  <meta name="description" content="Professional application built by Zecoryx" />
   <meta name="author" content="Zecoryx (Lazizbek Abdullayev)">
-  <meta name="keywords" content="react,vite,zecoryx,modern web development">
-  <meta name="generator" content="Zecoryx React Vite Generator">
-  <meta property="og:title" content="Zecoryx React Vite App">
-  <meta property="og:description" content="Professional React application developed by Zecoryx">
+  <meta name="keywords" content="react,nextjs,vite,zecoryx,modern web development">
+  <meta property="og:title" content="Zecoryx Web App">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${AUTHOR.portfolio}">
-  <meta property="og:image" content="https://zecoryx.uz/og-image.jpg">
   <meta name="twitter:creator" content="@zecoryx">
 `;
 
@@ -39,15 +35,33 @@ export class ProjectGenerator {
   }
 
   async init() {
-    const spinner = ora("Creating project...").start();
+    const spinner = ora("Creating project foundation...").start();
 
     try {
-      await this.createProject();
+      if (this.options.projectType === 'next') {
+        spinner.text = `Initialising Next.js project: ${chalk.cyan(this.options.projectName)}`;
+        await this.createNextProject();
+      } else {
+        spinner.text = `Initialising Vite project: ${chalk.cyan(this.options.projectName)}`;
+        await this.createViteProject();
+      }
+
+      spinner.text = "Installing additional dependencies...";
       await this.installDependencies();
+
+      spinner.text = "Configuring project files...";
       await this.configureProject();
+
+      spinner.text = "Updating metadata...";
       await this.updatePackageJson();
 
-      spinner.succeed(chalk.green("Project created successfully!"));
+      spinner.text = "Creating environment variables...";
+      await this.createEnvFiles();
+
+      spinner.text = "Initialising Git...";
+      await this.initializeGit();
+
+      spinner.succeed(chalk.green(`Project '${this.options.projectName}' created successfully!`));
       this.displaySuccessMessage();
     } catch (error) {
       spinner.fail(chalk.red("Project creation failed"));
@@ -56,254 +70,217 @@ export class ProjectGenerator {
     }
   }
 
-  async createProject() {
+  async createViteProject() {
     const { projectName, language } = this.options;
+    const template = language === 'ts' ? 'react-ts' : 'react';
 
-    // Create Vite project
-    await execa("npm", ["init", "vite@latest", projectName, "--", "--template", `react-${language}`], { stdio: "inherit" });
+    await execa("npm", ["init", "vite@latest", projectName, "--", "--template", template], { stdio: "inherit" });
 
-    // Copy template structure
-    const templatePath = path.join(__dirname, "templates", this.options.structure.toLowerCase());
-
-    if (await fs.pathExists(templatePath)) {
-      await fs.copy(templatePath, projectName, { overwrite: true });
+    if (this.options.structure) {
+      const templatePath = path.join(__dirname, "templates", this.options.structure.toLowerCase());
+      if (await fs.pathExists(templatePath)) {
+        await fs.copy(templatePath, projectName, { overwrite: true });
+      }
     }
 
-    // Update index.html
     await this.updateIndexHtml();
+  }
+
+  async createNextProject() {
+    const { projectName, language } = this.options;
+    const args = [
+      "create-next-app@latest",
+      projectName,
+      "--app",
+      "--tailwind",
+      "--eslint",
+      "--src-dir",
+      language === 'ts' ? "--ts" : "--js",
+      "--import-alias", "@/*",
+      "--no-turbopack"
+    ];
+
+    await execa("npx", args, { stdio: "inherit" });
   }
 
   async updateIndexHtml() {
     const indexPath = path.join(this.options.projectName, "index.html");
-
     if (await fs.pathExists(indexPath)) {
       let content = await fs.readFile(indexPath, "utf8");
-      content = content.replace("</head>", `${META_TAGS}\n</head>`);
+      content = content.replace(/<title>(.*?)<\/title>/, `<title>${this.options.projectName}</title>`);
+      if (!content.includes('name="author"')) {
+        content = content.replace("</head>", `${META_TAGS}\n</head>`);
+      }
       await fs.writeFile(indexPath, content);
     }
   }
 
   async updatePackageJson() {
     const pkgPath = path.join(this.options.projectName, "package.json");
+    if (!(await fs.pathExists(pkgPath))) return;
+
     const pkg = await fs.readJson(pkgPath);
-
-    // Update scripts
-    pkg.scripts = {
-      ...pkg.scripts,
-      dev: "vite --host 0.0.0.0",
-      preview: "vite preview --host 0.0.0.0",
-    };
-
-    // Add author information
     pkg.author = {
       name: AUTHOR.name,
       email: AUTHOR.email,
       url: AUTHOR.portfolio,
     };
 
-    // Add custom metadata
-    pkg.metadata = {
-      generatedBy: "Zecoryx React Vite Generator",
-      version: "1.0.0",
-      creator: AUTHOR.nickname,
-      links: {
-        portfolio: AUTHOR.portfolio,
-        github: AUTHOR.github,
-        telegram: AUTHOR.telegram,
-        kwork: AUTHOR.kwork,
-      },
-      configuration: {
-        ui: this.options.uiLibrary,
-        router: this.options.router,
-        icons: this.options.icons,
-      },
+    pkg.zecoryx = {
+      generatedAt: new Date().toISOString(),
+      projectType: this.options.projectType,
+      auth: this.options.auth,
+      ui: this.options.uiLibrary || 'Tailwind (Next.js default)'
     };
 
     await fs.writeJson(pkgPath, pkg, { spaces: 2 });
   }
 
+  async createEnvFiles() {
+    const { projectName, auth, projectType } = this.options;
+    const prefix = projectType === 'next' ? 'NEXT_PUBLIC_' : 'VITE_';
+
+    let envContent = `${prefix}API_URL=http://localhost:3000\n${prefix}APP_NAME=${projectName}\n`;
+
+    if (auth === 'Clerk') {
+      const clerkPrefix = projectType === 'next' ? 'NEXT_PUBLIC_' : 'VITE_';
+      envContent += `${clerkPrefix}CLERK_PUBLISHABLE_KEY=your_key\nCLERK_SECRET_KEY=your_secret\n`;
+    } else if (auth === 'Supabase') {
+      envContent += `${prefix}SUPABASE_URL=your_url\n${prefix}SUPABASE_ANON_KEY=your_key\n`;
+    } else if (auth === 'Firebase') {
+      envContent += `${prefix}FIREBASE_API_KEY=your_key\n${prefix}FIREBASE_AUTH_DOMAIN=your_domain\n`;
+    }
+
+    await fs.writeFile(path.join(projectName, ".env"), envContent);
+    await fs.writeFile(path.join(projectName, ".env.example"), envContent);
+  }
+
+  async initializeGit() {
+    const { projectName } = this.options;
+    try {
+      await execa("git", ["init"], { cwd: projectName });
+      await execa("git", ["add", "."], { cwd: projectName });
+      await execa("git", ["commit", "-m", "Initial commit from Zecoryx Generator"], { cwd: projectName });
+    } catch (e) { }
+  }
+
   async installDependencies() {
-    const { projectName, uiLibrary, router, icons, notification } = this.options;
+    const { projectName, uiLibrary, router, icons, notification, stateManagement, axios, auth, projectType } = this.options;
     const dependencies = [];
-    const devDependencies = [];
 
-    // UI Libraries
-    if (uiLibrary === "Tailwind CSS") {
-      await execa("npm", ["install", "tailwindcss", "@tailwindcss/vite"], {
-        cwd: projectName,
-        stdio: "inherit",
-      });
-    } else if (uiLibrary === "Chakra UI") {
-      await execa("npm", ["install", "@chakra-ui/react", "@emotion/react"], {
-        cwd: projectName,
-        stdio: "inherit",
-      });
-
-      await execa("npx", ["@chakra-ui/cli", "snippet", "add"], {
-        cwd: projectName,
-        stdio: "inherit",
-      });
+    if (projectType === 'vite') {
+      if (uiLibrary === "Tailwind CSS") dependencies.push("tailwindcss", "@tailwindcss/vite");
+      else if (uiLibrary === "Chakra UI") dependencies.push("@chakra-ui/react", "@emotion/react");
+      if (router) dependencies.push("react-router-dom");
+      if (notification === "react-toastify") dependencies.push("react-toastify");
+      else if (notification === "sonner") dependencies.push("sonner");
     }
 
-    // Router
-    if (router) {
-      dependencies.push("react-router-dom@latest");
+    if (icons) dependencies.push("react-icons");
+    if (stateManagement) dependencies.push("zustand");
+    if (axios) dependencies.push("axios");
+
+    // Auth dependencies
+    if (auth === 'Clerk') {
+      dependencies.push(projectType === 'next' ? "@clerk/nextjs" : "@clerk/clerk-react");
+    } else if (auth === 'Supabase') {
+      dependencies.push("@supabase/supabase-js");
+    } else if (auth === 'Firebase') {
+      dependencies.push("firebase");
     }
 
-    // Icons
-    if (icons) {
-      dependencies.push("react-icons@latest");
-    }
-
-    // Notifications
-    if (notification === "react-toastify") {
-      dependencies.push("react-toastify@latest");
-    } else if (notification === "sonner") {
-      dependencies.push("sonner@latest");
-    }
-
-    // Install remaining dependencies
     if (dependencies.length > 0) {
-      await execa("npm", ["install", ...dependencies], {
-        cwd: projectName,
-        stdio: "inherit",
-      });
+      console.log(chalk.blue(`\n📦 Installing: ${dependencies.join(", ")}...`));
+      await execa("npm", ["install", ...dependencies], { cwd: projectName, stdio: "inherit" });
+    }
+
+    if (uiLibrary === "Chakra UI") {
+      await execa("npx", ["@chakra-ui/cli", "snippet", "add"], { cwd: projectName, stdio: "inherit" });
     }
   }
 
   async configureProject() {
-    const { projectName, uiLibrary, router } = this.options;
-
-    await this.configureMainFile();
-    await this.configureVite();
-
-    if (uiLibrary === "Tailwind CSS") {
-      await this.configureTailwind();
-    } else if (uiLibrary === "Chakra UI") {
-      await this.configureChakraUI();
+    if (this.options.projectType === 'vite') {
+      await this.configureViteMain();
+      await this.configureViteConfig();
+      if (this.options.uiLibrary === "Tailwind CSS") await this.configureViteTailwind();
+      else if (this.options.uiLibrary === "Chakra UI") await this.configureViteChakra();
     }
   }
 
-  async configureMainFile() {
+  async configureViteMain() {
     const { projectName, router, language, uiLibrary } = this.options;
-    const ext = language === "tsx" ? "tsx" : "jsx";
+    const ext = language === "ts" ? "tsx" : "jsx";
     const mainPath = path.join(projectName, "src", `main.${ext}`);
-
-    if (!(await fs.pathExists(mainPath))) {
-      console.warn(chalk.yellow(`Main file not found at ${mainPath}`));
-      return;
-    }
+    if (!(await fs.pathExists(mainPath))) return;
 
     let content = await fs.readFile(mainPath, "utf8");
     let imports = [];
     let wrappers = [];
 
-    // Add router if selected
     if (router) {
-      imports.push("import { BrowserRouter } from 'react-router-dom'");
+      imports.push("import { BrowserRouter } from 'react-router-dom';");
       wrappers.push("BrowserRouter");
     }
-
-    // Add Chakra provider if selected
     if (uiLibrary === "Chakra UI") {
-      imports.push("import { Provider } from './components/ui/provider'");
+      imports.push("import { Provider } from './components/ui/provider';");
       wrappers.push("Provider");
     }
 
-    // Add all imports
-    if (imports.length > 0) {
-      content = content.replace("import React from 'react'", `import React from 'react';\n${imports.join("\n")}`);
-    }
-
-    // Wrap the App component with all providers
+    if (imports.length > 0) content = imports.join("\n") + "\n" + content;
     if (wrappers.length > 0) {
-      const wrapperChain = wrappers.reduceRight((acc, wrapper) => {
-        return `<${wrapper}>\n    ${acc}\n  </${wrapper}>`;
-      }, "<App />");
-
-      content = content.replace("<App />", wrapperChain);
+      let wrappedApp = "<App />";
+      wrappers.forEach(wrapper => { wrappedApp = `<${wrapper}>\n      ${wrappedApp}\n    </${wrapper}>`; });
+      content = content.replace("<App />", wrappedApp);
     }
-
     await fs.writeFile(mainPath, content);
   }
 
-  async configureVite() {
-    const { projectName, uiLibrary } = this.options;
-    const vitePath = path.join(projectName, "vite.config.js");
-
-    let content = `import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\n\n`;
-
-    if (uiLibrary === "Tailwind CSS") {
-      content += `import tailwindcss from '@tailwindcss/vite';\n\n`;
-    }
-
-    content += `export default defineConfig({\n  plugins: [\n    react()`;
-
-    if (uiLibrary === "Tailwind CSS") {
-      content += `,\n    tailwindcss()`;
-    }
-
-    content += `\n  ],\n  server: {\n    host: '0.0.0.0',\n    port: 5173,\n    open: true\n  }\n});`;
-
+  async configureViteConfig() {
+    const { projectName, uiLibrary, language } = this.options;
+    const ext = language === 'ts' ? 'ts' : 'js';
+    const vitePath = path.join(projectName, `vite.config.${ext}`);
+    const content = `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+${uiLibrary === "Tailwind CSS" ? "import tailwindcss from '@tailwindcss/vite';\n" : ""}
+export default defineConfig({
+  plugins: [react(), ${uiLibrary === "Tailwind CSS" ? "tailwindcss()," : ""}],
+  server: { host: true, port: 5173, open: true }
+});`;
     await fs.writeFile(vitePath, content);
+    const oldExt = ext === 'ts' ? 'js' : 'ts';
+    const oldPath = path.join(projectName, `vite.config.${oldExt}`);
+    if (await fs.pathExists(oldPath)) await fs.remove(oldPath);
   }
 
-  async configureTailwind() {
+  async configureViteTailwind() {
     const { projectName } = this.options;
-    const configPath = path.join(projectName, "tailwind.config.js");
-
-    const content = `import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(),
-    tailwindcss(),
-  ],
-})`;
-
-    await fs.writeFile(configPath, content);
-
-    // Update CSS file
     const cssPath = path.join(projectName, "src", "index.css");
-    const cssContent = `@import "tailwindcss";`;
-
+    const cssContent = `@import "tailwindcss";\n\n:root {\n  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;\n  line-height: 1.5;\n  font-weight: 400;\n}\n`;
     await fs.writeFile(cssPath, cssContent);
   }
 
-  async configureChakraUI() {
-    const { projectName } = this.options;
-    const providerPath = path.join(projectName, "src", "components", "ui", "provider.jsx");
-
-    // Ensure provider component exists
-    await fs.ensureDir(path.dirname(providerPath));
-
-    const providerContent = `../src/components/ui/provider.jsx';
-
-export function Provider({ children }) {
-  return (
-    <Provider>
-      {children}
-    </Provider>
-  );
-}`;
-
-    await fs.writeFile(providerPath, providerContent);
+  async configureViteChakra() {
+    const { projectName, language } = this.options;
+    const ext = language === 'ts' ? 'tsx' : 'jsx';
+    const providerPath = path.join(projectName, "src", "components", "ui", "provider." + ext);
+    if (await fs.pathExists(providerPath)) {
+      let content = await fs.readFile(providerPath, "utf8");
+      if (content.includes("export function Provider") && content.includes("<Provider>")) {
+        content = content.replace("<Provider>", "<ChakraProvider>").replace("</Provider>", "</ChakraProvider>");
+        if (!content.includes("ChakraProvider")) content = "import { ChakraProvider, defaultSystem } from '@chakra-ui/react';\n\n" + content;
+        await fs.writeFile(providerPath, content);
+      }
+    }
   }
 
   displaySuccessMessage() {
-    const { projectName } = this.options;
-
+    const { projectName, projectType } = this.options;
     console.log(chalk.green.bold("\n✔ Project setup completed by Zecoryx!"));
     console.log(chalk.cyan("\nTo get started:"));
     console.log(chalk.cyan(`  cd ${projectName}`));
-    console.log(chalk.cyan("  npm run dev\n"));
-    console.log(chalk.dim("Server will run on http://localhost:5173"));
-    console.log(chalk.dim("Available on your network at 0.0.0.0"));
-    console.log(chalk.yellow("\nMore from Zecoryx:"));
-    console.log(chalk.yellow(`Portfolio: ${AUTHOR.portfolio}`));
-    console.log(chalk.yellow(`GitHub: ${AUTHOR.github}`));
+    console.log(chalk.cyan(projectType === 'next' ? "  npm run dev" : "  npm run dev\n"));
+    console.log(chalk.yellow(`\nPortfolio: ${AUTHOR.portfolio}`));
     console.log(chalk.yellow(`Telegram: ${AUTHOR.telegram}`));
   }
 }
