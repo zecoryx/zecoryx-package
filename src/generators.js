@@ -38,6 +38,14 @@ export class ProjectGenerator {
     const spinner = ora("Creating project foundation...").start();
 
     try {
+      // Check if project directory already exists
+      const projectPath = path.join(process.cwd(), this.options.projectName);
+      if (await fs.pathExists(projectPath)) {
+        spinner.fail(chalk.red(`Project directory '${this.options.projectName}' already exists!`));
+        console.log(chalk.yellow('\nPlease choose a different project name or remove the existing directory.'));
+        process.exit(1);
+      }
+
       if (this.options.projectType === 'next') {
         spinner.stop();
         console.log(`\n🚀 Initialising Next.js project: ${chalk.cyan(this.options.projectName)}`);
@@ -200,8 +208,17 @@ export class ProjectGenerator {
     }
 
     if (dependencies.length > 0) {
-      console.log(chalk.blue(`\n📦 Installing: ${dependencies.join(", ")}...`));
-      await execa("npm", ["install", ...dependencies], { cwd: projectName, stdio: "inherit" });
+      console.log(chalk.blue(`\n📦 Installing dependencies: ${chalk.cyan(dependencies.length)} packages`));
+      console.log(chalk.gray(`   ${dependencies.join(", ")}`));
+      try {
+        await execa("npm", ["install", ...dependencies], { cwd: projectName, stdio: "inherit" });
+        console.log(chalk.green('✓ Dependencies installed successfully'));
+      } catch (error) {
+        console.error(chalk.red('\n✗ Failed to install dependencies'));
+        console.error(chalk.yellow('You can install them manually by running:'));
+        console.error(chalk.cyan(`  cd ${projectName} && npm install ${dependencies.join(' ')}`));
+        throw error;
+      }
     }
 
     if (uiLibrary === "Chakra UI") {
@@ -265,8 +282,27 @@ export default defineConfig({
 
   async configureViteTailwind() {
     const { projectName } = this.options;
+    
+    // Create PostCSS config for Tailwind v4
+    const postcssPath = path.join(projectName, "postcss.config.js");
+    const postcssContent = `export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+};
+`;
+    await fs.writeFile(postcssPath, postcssContent);
+    
+    // Update CSS file with Tailwind v4 import
     const cssPath = path.join(projectName, "src", "index.css");
-    const cssContent = `@import "tailwindcss";\n\n:root {\n  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;\n  line-height: 1.5;\n  font-weight: 400;\n}\n`;
+    const cssContent = `@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+`;
     await fs.writeFile(cssPath, cssContent);
   }
 

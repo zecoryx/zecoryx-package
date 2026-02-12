@@ -1,12 +1,42 @@
 {
   "name": "zecoryx-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
+  "description": "Professional web project generator for React (Vite) and Next.js with Tailwind CSS v4, Chakra UI, authentication, and modern tooling",
   "type": "module",
+  "keywords": [
+    "cli",
+    "generator",
+    "react",
+    "nextjs",
+    "vite",
+    "tailwind",
+    "chakra-ui",
+    "scaffold",
+    "boilerplate",
+    "template",
+    "zecoryx",
+    "web-development"
+  ],
+  "author": {
+    "name": "Lazizbek Abdullayev",
+    "email": "lazizbekabdullayev118@gmail.com",
+    "url": "https://zecoryx.uz"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zecoryx/zecoryx-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zecoryx/zecoryx-tools/issues"
+  },
+  "homepage": "https://github.com/zecoryx/zecoryx-tools#readme",
   "bin": {
     "zecoryx": "bin/cli.js"
   },
   "scripts": {
-    "start": "node ./bin/cli.js"
+    "start": "node ./bin/cli.js",
+    "dev": "node ./bin/cli.js"
   },
   "dependencies": {
     "boxen": "^8.0.1",
@@ -22,5 +52,8 @@
   "files": [
     "bin/",
     "src/"
-  ]
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
