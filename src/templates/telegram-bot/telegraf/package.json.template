@@ -1,6 +1,7 @@
 {
   "name": "{{projectName}}",
   "version": "1.0.0",
+  "description": "Telegram Bot created with Zecoryx CLI",
   "main": "src/bot.js",
   "type": "module",
   "scripts": {

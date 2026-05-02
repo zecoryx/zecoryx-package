@@ -25,27 +25,29 @@ export class FrontendGenerator extends BaseGenerator {
     const spinner = ora("Creating frontend project foundation...").start();
 
     try {
-      const projectPath = path.join(process.cwd(), this.options.projectName);
-
       if (this.options.projectType === "next") {
         spinner.stop();
-        console.log(
-          `\n🚀 Initialising Next.js project: ${chalk.cyan(this.options.projectName)}`,
-        );
+        console.log(`\n🚀 Initialising Next.js project: ${chalk.cyan(this.options.projectName)}`);
         await this.createNextProject();
       } else {
         spinner.stop();
-        console.log(
-          `\n🚀 Initialising Vite project: ${chalk.cyan(this.options.projectName)}`,
-        );
+        console.log(`\n🚀 Initialising Vite project: ${chalk.cyan(this.options.projectName)}`);
         await this.createViteProject();
       }
 
-      spinner.start("Installing additional dependencies...");
+      spinner.start("Installing dependencies...");
       await this.installDependencies();
 
       spinner.text = "Configuring project files...";
       await this.configureProject();
+
+      if (this.options.linting) {
+        spinner.text = "Setting up ESLint + Prettier...";
+        await this.setupLinting(this.options.projectName, {
+          isFrontend: true,
+          language: this.options.language || "js",
+        });
+      }
 
       spinner.text = "Updating metadata...";
       await this.updatePackageJson(this.options.projectName, {
@@ -56,19 +58,15 @@ export class FrontendGenerator extends BaseGenerator {
 
       spinner.text = "Creating environment variables...";
       await this.createFrontendEnvFiles();
+      await this.ensureGitignoreHasEnv(this.options.projectName);
 
       spinner.text = "Initialising Git...";
       await this.initializeGit(this.options.projectName);
 
       spinner.succeed(
-        chalk.green(
-          `Frontend project '${this.options.projectName}' created successfully!`,
-        ),
+        chalk.green(`Frontend project '${this.options.projectName}' created successfully!`),
       );
-      this.displaySuccessMessage(
-        this.options.projectName,
-        this.options.projectType,
-      );
+      this.displaySuccessMessage(this.options.projectName, this.options.projectType);
     } catch (error) {
       spinner.fail(chalk.red("Frontend project creation failed"));
       throw error;
@@ -81,7 +79,7 @@ export class FrontendGenerator extends BaseGenerator {
 
     await execa(
       "npx",
-      ["create-vite@latest", projectName, "--template", template],
+      ["create-vite@latest", projectName, "--template", template, "--no-interactive"],
       {
         stdio: "inherit",
         env: { ...process.env, NPM_CONFIG_YES: "true" },
@@ -89,7 +87,6 @@ export class FrontendGenerator extends BaseGenerator {
     );
 
     if (this.options.structure) {
-      // Adjusted path because generators are now in src/generators/
       const templatePath = path.join(
         __dirname,
         "..",
@@ -98,14 +95,35 @@ export class FrontendGenerator extends BaseGenerator {
       );
       if (await fs.pathExists(templatePath)) {
         await fs.copy(templatePath, projectName, { overwrite: true });
+        const unusedExt = language === "ts" ? "jsx" : "tsx";
+        const srcDir = path.join(projectName, "src");
+        await this.removeUnusedExtFiles(srcDir, unusedExt);
       }
     }
 
     await this.updateIndexHtml();
   }
 
+  async removeUnusedExtFiles(dir, ext) {
+    if (!(await fs.pathExists(dir))) return;
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await this.removeUnusedExtFiles(fullPath, ext);
+      } else if (entry.name.endsWith(`.${ext}`)) {
+        await fs.remove(fullPath);
+      }
+    }
+  }
+
   async createNextProject() {
-    const { projectName, language } = this.options;
+    const { projectName, language, packageManager } = this.options;
+    const pmFlag = packageManager === "pnpm" ? "--use-pnpm"
+      : packageManager === "yarn" ? "--use-yarn"
+      : packageManager === "bun"  ? "--use-bun"
+      : "--use-npm";
+
     const args = [
       "create-next-app@latest",
       projectName,
@@ -114,9 +132,9 @@ export class FrontendGenerator extends BaseGenerator {
       "--eslint",
       "--src-dir",
       language === "ts" ? "--ts" : "--js",
-      "--import-alias",
-      "@/*",
+      "--import-alias", "@/*",
       "--no-turbopack",
+      pmFlag,
       "--yes",
     ];
 
@@ -138,6 +156,17 @@ export class FrontendGenerator extends BaseGenerator {
     }
   }
 
+  async ensureGitignoreHasEnv(projectName) {
+    const gitignorePath = path.join(projectName, ".gitignore");
+    if (await fs.pathExists(gitignorePath)) {
+      let content = await fs.readFile(gitignorePath, "utf8");
+      if (!content.includes("\n.env\n") && !content.includes("\n.env")) {
+        content += "\n.env\n";
+        await fs.writeFile(gitignorePath, content);
+      }
+    }
+  }
+
   async createFrontendEnvFiles() {
     const { projectName, auth, projectType } = this.options;
     const prefix = projectType === "next" ? "NEXT_PUBLIC_" : "VITE_";
@@ -145,8 +174,11 @@ export class FrontendGenerator extends BaseGenerator {
     let envContent = `${prefix}API_URL=http://localhost:3000\n${prefix}APP_NAME=${projectName}\n`;
 
     if (auth === "Clerk") {
-      const clerkPrefix = projectType === "next" ? "NEXT_PUBLIC_" : "VITE_";
-      envContent += `${clerkPrefix}CLERK_PUBLISHABLE_KEY=your_key\nCLERK_SECRET_KEY=your_secret\n`;
+      if (projectType === "next") {
+        envContent += `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_publishable_key\nCLERK_SECRET_KEY=your_secret_key\n`;
+      } else {
+        envContent += `VITE_CLERK_PUBLISHABLE_KEY=your_publishable_key\n`;
+      }
     } else if (auth === "Supabase") {
       envContent += `${prefix}SUPABASE_URL=your_url\n${prefix}SUPABASE_ANON_KEY=your_key\n`;
     } else if (auth === "Firebase") {
@@ -157,27 +189,14 @@ export class FrontendGenerator extends BaseGenerator {
   }
 
   async installDependencies() {
-    const {
-      projectName,
-      uiLibrary,
-      router,
-      icons,
-      notification,
-      stateManagement,
-      axios,
-      auth,
-      projectType,
-    } = this.options;
+    const { projectName, uiLibrary, router, icons, notification, stateManagement, axios, auth, projectType } = this.options;
     const dependencies = [];
 
     if (projectType === "vite") {
-      if (uiLibrary === "Tailwind CSS")
-        dependencies.push("tailwindcss", "@tailwindcss/vite");
-      else if (uiLibrary === "Chakra UI")
-        dependencies.push("@chakra-ui/react", "@emotion/react");
+      if (uiLibrary === "Tailwind CSS") dependencies.push("tailwindcss", "@tailwindcss/vite");
+      else if (uiLibrary === "Chakra UI") dependencies.push("@chakra-ui/react", "@emotion/react");
       if (router) dependencies.push("react-router-dom");
-      if (notification === "react-toastify")
-        dependencies.push("react-toastify");
+      if (notification === "react-toastify") dependencies.push("react-toastify");
       else if (notification === "sonner") dependencies.push("sonner");
     }
 
@@ -187,30 +206,22 @@ export class FrontendGenerator extends BaseGenerator {
     if (axios) dependencies.push("axios");
 
     if (auth === "Clerk") {
-      dependencies.push(
-        projectType === "next" ? "@clerk/nextjs" : "@clerk/clerk-react",
-      );
+      dependencies.push(projectType === "next" ? "@clerk/nextjs" : "@clerk/clerk-react");
     } else if (auth === "Supabase") {
       dependencies.push("@supabase/supabase-js");
     } else if (auth === "Firebase") {
       dependencies.push("firebase");
     }
 
-    if (dependencies.length > 0) {
-      console.log(
-        chalk.blue(
-          `\n📦 Installing dependencies: ${chalk.cyan(dependencies.length)} packages`,
-        ),
-      );
-      try {
-        await execa("npm", ["install", ...dependencies], {
-          cwd: projectName,
-          stdio: "inherit",
-        });
-      } catch (error) {
-        console.error(chalk.red("\n✗ Failed to install dependencies"));
-        throw error;
+    try {
+      const { cmd, args } = this.pmInstall(dependencies);
+      if (dependencies.length > 0) {
+        console.log(chalk.blue(`\n📦 Installing: ${chalk.cyan(dependencies.join(", "))}`));
       }
+      await execa(cmd, args, { cwd: projectName, stdio: "inherit" });
+    } catch (error) {
+      console.error(chalk.red("\n✗ Failed to install dependencies"));
+      throw error;
     }
 
     if (uiLibrary === "Chakra UI") {
@@ -225,10 +236,8 @@ export class FrontendGenerator extends BaseGenerator {
     if (this.options.projectType === "vite") {
       await this.configureViteMain();
       await this.configureViteConfig();
-      if (this.options.uiLibrary === "Tailwind CSS")
-        await this.configureViteTailwind();
-      else if (this.options.uiLibrary === "Chakra UI")
-        await this.configureViteChakra();
+      if (this.options.uiLibrary === "Tailwind CSS") await this.configureViteTailwind();
+      else if (this.options.uiLibrary === "Chakra UI") await this.configureViteChakra();
     }
   }
 
@@ -281,45 +290,26 @@ export default defineConfig({
 
   async configureViteTailwind() {
     const { projectName } = this.options;
-
-    // FIX: Removed postcss.config.js creation as it's not needed for Tailwind v4 with Vite plugin
-
-    // Update CSS file with Tailwind v4 import
     const cssPath = path.join(projectName, "src", "index.css");
-    const cssContent = `@import "tailwindcss";
-
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-}
-`;
-    await fs.writeFile(cssPath, cssContent);
+    await fs.writeFile(cssPath, `@import "tailwindcss";\n\n:root {\n  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;\n  line-height: 1.5;\n  font-weight: 400;\n}\n`);
   }
 
   async configureViteChakra() {
     const { projectName, language } = this.options;
     const ext = language === "ts" ? "tsx" : "jsx";
-    const providerPath = path.join(
-      projectName,
-      "src",
-      "components",
-      "ui",
-      "provider." + ext,
-    );
+    const providerPath = path.join(projectName, "src", "components", "ui", `provider.${ext}`);
     if (await fs.pathExists(providerPath)) {
       let content = await fs.readFile(providerPath, "utf8");
       if (
         content.includes("export function Provider") &&
-        content.includes("<Provider>")
+        content.includes("<Provider>") &&
+        !content.includes("ChakraProvider")
       ) {
-        content = content
-          .replace("<Provider>", "<ChakraProvider>")
-          .replace("</Provider>", "</ChakraProvider>");
-        if (!content.includes("ChakraProvider"))
-          content =
-            "import { ChakraProvider, defaultSystem } from '@chakra-ui/react';\n\n" +
-            content;
+        content =
+          "import { ChakraProvider, defaultSystem } from '@chakra-ui/react';\n\n" +
+          content
+            .replace("<Provider>", "<ChakraProvider value={defaultSystem}>")
+            .replace("</Provider>", "</ChakraProvider>");
         await fs.writeFile(providerPath, content);
       }
     }

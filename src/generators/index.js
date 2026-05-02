@@ -45,18 +45,22 @@ export class ProjectGenerator {
 
   async initFullstack() {
     const { projectName } = this.options;
+    const projectPath = path.join(process.cwd(), projectName);
 
     console.log(chalk.blue(`\n🏗️ Creating Fullstack project: ${projectName}`));
+
+    // Create root directory
+    await fs.ensureDir(projectPath);
 
     // Create sub-projects
     const frontendOptions = {
       ...this.options,
-      projectName: `${projectName}-frontend`,
+      projectName: `${projectName}/frontend`,
       category: "frontend",
     };
     const backendOptions = {
       ...this.options,
-      projectName: `${projectName}-backend`,
+      projectName: `${projectName}/backend`,
       category: "backend",
     };
 

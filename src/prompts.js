@@ -10,6 +10,19 @@ export const getPrompts = async () => {
       default: "my-zecoryx-project",
       validate: (input) => !!input.trim() || "Name cannot be empty",
     },
+    // Package Manager
+    {
+      type: "list",
+      name: "packageManager",
+      message: "Choose package manager:",
+      choices: [
+        { name: "npm", value: "npm" },
+        { name: chalk.cyan("pnpm") + "  (faster, disk efficient)", value: "pnpm" },
+        { name: chalk.yellow("yarn"), value: "yarn" },
+        { name: chalk.green("bun") + "  (fastest)", value: "bun" },
+      ],
+      default: "npm",
+    },
     {
       type: "list",
       name: "category",
@@ -46,6 +59,19 @@ export const getPrompts = async () => {
         { name: chalk.red("NestJS (Enterprise)"), value: "nestjs" },
       ],
       when: (answers) => ["backend", "fullstack"].includes(answers.category),
+    },
+    // Backend Language
+    {
+      type: "list",
+      name: "backendLanguage",
+      message: "Choose backend language:",
+      choices: [
+        { name: "JavaScript", value: "js" },
+        { name: chalk.blue("TypeScript"), value: "ts" },
+      ],
+      when: (answers) =>
+        ["backend", "fullstack"].includes(answers.category) &&
+        answers.backendFramework !== "nestjs",
     },
     // Telegram Bot Specific
     {
@@ -136,6 +162,13 @@ export const getPrompts = async () => {
       message: "Add Axios for API requests?",
       default: true,
       when: (answers) => ["frontend", "fullstack"].includes(answers.category),
+    },
+    // Linting & Formatting
+    {
+      type: "confirm",
+      name: "linting",
+      message: "Add ESLint + Prettier?",
+      default: true,
     },
   ]);
 };
