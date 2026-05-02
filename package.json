@@ -1,6 +1,6 @@
 {
   "name": "zecoryx-cli",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Professional web project generator for React (Vite) and Next.js with Tailwind CSS v4, Chakra UI, authentication, and modern tooling",
   "type": "module",
   "keywords": [

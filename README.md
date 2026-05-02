@@ -1,60 +1,41 @@
-# ⚡ Zecoryx CLI
+# zecoryx-cli
 
-**Zecoryx CLI** — A professional scaffolding tool designed to generate modern **Fullstack & Telegram Bot** projects based on Clean Architecture principles.
+A professional scaffolding tool designed to generate modern projects based on Clean Architecture principles.
 
-![Version](https://img.shields.io/npm/v/zecoryx-cli?style=flat-square)
-![License](https://img.shields.io/npm/l/zecoryx-cli?style=flat-square)
+## Quick Start
 
----
-
-## ✨ Key Features
-
-- 🚀 **Frontend:** React (Vite) and Next.js (App Router) + Tailwind CSS v4 / Chakra UI v3.
-- ⚙️ **Backend:** Express.js, Fastify, and NestJS + Clean Architecture (api, core, infrastructure).
-- 🤖 **Telegram Bot:** grammY, Telegraf, and NTBA + Layered structure.
-- 🔐 **First-Class Auth:** Built-in integration for Clerk, Supabase, and Firebase.
-- 📂 **Clean Code:** Every project is structured into industry-standard layers for scalability.
-- 💎 **Modern DX:** Elegant terminal interface, interactive prompts, and automatic update checks.
-
----
-
-## 🚀 Quick Start
-
-No installation required! Just run:
+The fastest way to start a new project is using `npx`:
 
 ```bash
 npx zecoryx-cli
 ```
 
-### Global Installation (Optional)
+## Features
+
+- **Frontend:** React (Vite) and Next.js with Tailwind CSS v4 or Chakra UI v3.
+- **Backend:** Express.js, Fastify, and NestJS with layered architecture.
+- **Telegram Bot:** grammY, Telegraf, and NTBA templates.
+- **Authentication:** Ready-to-use integration for Clerk, Supabase, and Firebase.
+- **Database:** Support for PostgreSQL, MongoDB, and Supabase.
+- **Modern Tooling:** Built-in ESLint, Prettier, Zustand, and Axios support.
+
+## Usage
+
+You can also install the CLI globally:
 
 ```bash
 npm install -g zecoryx-cli
 zecoryx
 ```
 
----
+## Project Structure
 
-## 📂 Project Structure (Clean Architecture)
-
-Our generators organize your project into distinct layers for better maintainability:
-
-- **api/** – Entry points, Routes, and Controllers.
-- **core/** – Core business logic (Services/Use Cases).
-- **infrastructure/** – Configuration, Database connections, and External services.
+Every project is structured into industry-standard layers:
+- `api/` – Routes and Controllers.
+- `core/` – Business logic and Services.
+- `infrastructure/` – Database and External services.
 
 ---
 
-## 👨‍💻 Author
-
-**Lazizbek Abdullayev (Zecoryx)**
-
-- Portfolio: [zecoryx.uz](https://zecoryx.uz)
-- GitHub: [@zecoryx](https://github.com/zecoryx)
-- Telegram: [@zecoryx](https://t.me/zecoryx)
-
----
-
-## 📄 License
-
-MIT © Lazizbek Abdullayev
+**Author:** [Lazizbek Abdullayev](https://zecoryx.uz)  
+**License:** MIT
