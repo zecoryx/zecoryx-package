@@ -8,10 +8,26 @@ export const getPrompts = async () => {
       name: "action",
       message: "What would you like to do?",
       choices: [
-        { name: chalk.yellow("Add team skills & guidelines") + "  (skills/ folder)", value: "skills-only" },
+        { name: chalk.yellow("Add AI Skills") + "  (Select specific .md files)", value: "skills-only" },
         { name: chalk.green("Add architecture documentation") + "  (structure.md)", value: "structure-only" },
         { name: chalk.cyan("New Project") + "  (Full scaffold)", value: "new-project" },
       ],
+    },
+    {
+      type: "checkbox",
+      name: "selectedSkills",
+      message: "Select AI Skills to add:",
+      choices: [
+        { name: "Clean Coder", value: "clean-coder.md" },
+        { name: "Performance Tuner", value: "performance-tuner.md" },
+        { name: "UI/UX Visionary", value: "ui-ux-visionary.md" },
+        { name: "Security Bug Hunter", value: "security-bug-hunter.md" },
+        { name: "SEO Strategist", value: "seo-strategist.md" },
+        { name: "Marketing Strategist", value: "marketing-strategist.md" },
+        { name: "Scientific Researcher", value: "scientific-researcher.md" },
+      ],
+      when: (answers) => answers.action === "skills-only" || (answers.action === "new-project" && answers.addSkills),
+      validate: (input) => input.length > 0 || "Please select at least one skill",
     },
     {
       type: "input",

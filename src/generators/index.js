@@ -1,9 +1,13 @@
 import { FrontendGenerator } from "./frontend.js";
 import { BackendGenerator } from "./backend.js";
 import { TelegramBotGenerator } from "./telegram-bot.js";
+import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs-extra";
 import chalk from "chalk";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class ProjectGenerator {
   constructor(options) {
@@ -91,11 +95,18 @@ export class ProjectGenerator {
     const projectPath = this.options.installPath || path.join(process.cwd(), this.options.projectName);
     const skillsTemplatePath = path.join(__dirname, "..", "templates", "skills");
     const destPath = path.join(projectPath, "skills");
+    const selectedSkills = this.options.selectedSkills || [];
 
     if (await fs.pathExists(skillsTemplatePath)) {
       await fs.ensureDir(destPath);
-      await fs.copy(skillsTemplatePath, destPath);
-      console.log(chalk.cyan(`\n📚 Added team skills & guidelines to /skills directory.`));
+      for (const skill of selectedSkills) {
+        const srcFile = path.join(skillsTemplatePath, skill);
+        const destFile = path.join(destPath, skill);
+        if (await fs.pathExists(srcFile)) {
+          await fs.copy(srcFile, destFile);
+        }
+      }
+      console.log(chalk.cyan(`\n📚 Added selected AI Skills to /skills directory.`));
     }
   }
 
