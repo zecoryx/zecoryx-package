@@ -1,6 +1,5 @@
 import chalk from "chalk";
 import figlet from "figlet";
-import gradient from "gradient-string";
 import updateNotifier from "update-notifier";
 import fs from "fs-extra";
 import path from "path";
@@ -16,12 +15,10 @@ export async function main() {
   // Update checker
   updateNotifier({ pkg }).notify();
 
-  // ASCII Art Logo
+  // Minimal Startup
   console.clear();
-  console.log(
-    chalk.white(figlet.textSync("ZECORYX", { horizontalLayout: "full" })),
-  );
-  console.log(chalk.blue.bold("\n⚡ Professional Web Project Generator\n"));
+  console.log(chalk.bold(`\n⚡ Zecoryx CLI v${pkg.version}`));
+  console.log(chalk.gray("Professional project generator\n"));
 
   try {
     const answers = await getPrompts();

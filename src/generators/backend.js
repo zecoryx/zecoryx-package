@@ -13,14 +13,14 @@ export class BackendGenerator extends BaseGenerator {
     const spinner = ora("Creating backend project foundation...").start();
 
     try {
-      const projectPath = path.join(process.cwd(), this.options.projectName);
+      const projectPath = this.options.installPath || path.join(process.cwd(), this.options.projectName);
       const framework = this.options.backendFramework || "express";
       const language = this.options.backendLanguage || "js";
 
       spinner.stop();
-      const langLabel = language === "ts" ? chalk.blue("TypeScript") : "JavaScript";
+      const langLabel = language === "ts" ? "TypeScript" : "JavaScript";
       console.log(
-        `\n🚀 Initialising ${chalk.yellow(framework.toUpperCase())} ${langLabel} Backend: ${chalk.cyan(this.options.projectName)}`,
+        `\nInitializing ${chalk.bold(framework.toUpperCase())} (${langLabel}) at ${chalk.cyan(this.options.projectName)}`,
       );
 
       if (framework === "nestjs") {
@@ -32,7 +32,11 @@ export class BackendGenerator extends BaseGenerator {
         await execa(
           "npx",
           ["@nestjs/cli", "new", this.options.projectName, "--package-manager", pmFlag, "--skip-git"],
-          { stdio: "inherit", env: { ...process.env, NPM_CONFIG_YES: "true" } },
+          { 
+            cwd: path.dirname(projectPath),
+            stdio: "inherit", 
+            env: { ...process.env, NPM_CONFIG_YES: "true" } 
+          },
         );
       } else {
         const templateName = language === "ts" ? `${framework}-ts` : framework;
@@ -72,7 +76,7 @@ export class BackendGenerator extends BaseGenerator {
         framework,
         language,
         db: this.options.database || "none",
-        architecture: "Clean Architecture (Layered)",
+        architecture: "Standard Flat Structure",
       });
 
       spinner.text = "Initialising Git...";

@@ -13,12 +13,12 @@ export class TelegramBotGenerator extends BaseGenerator {
     const spinner = ora("Creating Telegram bot project foundation...").start();
 
     try {
-      const projectPath = path.join(process.cwd(), this.options.projectName);
+      const projectPath = this.options.installPath || path.join(process.cwd(), this.options.projectName);
       const framework = this.options.botFramework || "grammy";
 
       spinner.stop();
       console.log(
-        `\n🚀 Initialising ${chalk.yellow(framework.toUpperCase())} Telegram Bot: ${chalk.cyan(this.options.projectName)}`,
+        `\nInitializing ${chalk.bold(framework.toUpperCase())} Telegram Bot at ${chalk.cyan(this.options.projectName)}`,
       );
 
       const templatePath = path.join(__dirname, "..", "templates", "telegram-bot", framework);
@@ -50,7 +50,7 @@ export class TelegramBotGenerator extends BaseGenerator {
       await this.updatePackageJson(projectPath, {
         projectType: "telegram-bot",
         framework,
-        architecture: "Clean Architecture (Layered)",
+        architecture: "Standard Modular Structure",
       });
 
       spinner.text = "Initialising Git...";
@@ -59,7 +59,7 @@ export class TelegramBotGenerator extends BaseGenerator {
       spinner.succeed(
         chalk.green(`Telegram Bot project '${this.options.projectName}' created successfully!`),
       );
-      this.displayBotSuccessMessage(this.options.projectName);
+      this.displaySuccessMessage(this.options.projectName, "telegram-bot");
     } catch (error) {
       spinner.fail(chalk.red("Telegram Bot project creation failed"));
       throw error;
@@ -74,14 +74,6 @@ export class TelegramBotGenerator extends BaseGenerator {
       console.error(chalk.red("\n✗ Failed to install dependencies"));
       throw error;
     }
-  }
-
-  displayBotSuccessMessage(projectName) {
-    console.log(chalk.green.bold("\n✔ Telegram Bot project created by Zecoryx!"));
-    console.log(chalk.cyan("\nTo get started:"));
-    console.log(chalk.cyan(`  cd ${projectName}`));
-    console.log(chalk.yellow("  1. Open .env and set your BOT_TOKEN"));
-    console.log(chalk.cyan(`  2. ${this.devRunCmd}\n`));
   }
 
   async createBotEnvFiles(projectPath) {

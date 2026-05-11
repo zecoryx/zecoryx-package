@@ -166,12 +166,14 @@ export class BaseGenerator {
 
   // ─── Success messages ────────────────────────────────────────────────────────
 
-  displaySuccessMessage(projectPath, projectType) {
-    console.log(chalk.green.bold("\n✔ Project setup completed by Zecoryx!"));
-    console.log(chalk.cyan("\nTo get started:"));
-    console.log(chalk.cyan(`  cd ${projectPath}`));
-    console.log(chalk.cyan(`  ${this.devRunCmd}\n`));
-    console.log(chalk.yellow(`Portfolio: ${AUTHOR.portfolio}`));
-    console.log(chalk.yellow(`Telegram:  ${AUTHOR.telegram}`));
+  displaySuccessMessage(projectName, projectType) {
+    console.log(chalk.green(`\n✔ Project ${chalk.bold(projectName)} generated successfully.`));
+    
+    console.log(chalk.white(`\nNext steps:`));
+    console.log(chalk.cyan(`  cd ${projectName}`));
+    console.log(chalk.cyan(`  ${this.devRunCmd}`));
+
+    console.log(chalk.gray(`\nBuilt with Zecoryx CLI`));
+    console.log(chalk.gray(`Portfolio: ${AUTHOR.portfolio}\n`));
   }
 }

@@ -1,7 +1,7 @@
 import Fastify from "fastify";
-import cors from "./api/plugins/cors.js";
-import exampleRoutes from "./api/routes/example.routes.js";
-import { env } from "./infrastructure/config/env.js";
+import cors from "./middlewares/cors.js";
+import exampleRoutes from "./routes/example.routes.js";
+import { env } from "./config/env.js";
 
 const fastify = Fastify({ logger: true });
 
