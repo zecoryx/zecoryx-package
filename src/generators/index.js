@@ -19,8 +19,8 @@ export class ProjectGenerator {
       this.options.projectName = path.basename(projectPath);
     }
 
-    // Check if project directory already exists and is not empty
-    if (await fs.pathExists(projectPath)) {
+    // Check if project directory already exists and is not empty (Only for new projects)
+    if (this.options.action === "new-project" && await fs.pathExists(projectPath)) {
       const files = await fs.readdir(projectPath);
       if (files.length > 0) {
         // If it's current dir, check if it's "mostly" empty
