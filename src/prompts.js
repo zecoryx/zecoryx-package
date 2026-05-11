@@ -4,10 +4,20 @@ import chalk from "chalk";
 export const getPrompts = async () => {
   return await inquirer.prompt([
     {
+      type: "list",
+      name: "action",
+      message: "What would you like to do?",
+      choices: [
+        { name: chalk.yellow("Add team skills & guidelines") + "  (skills/ folder)", value: "skills-only" },
+        { name: chalk.green("Add architecture documentation") + "  (structure.md)", value: "structure-only" },
+        { name: chalk.cyan("New Project") + "  (Full scaffold)", value: "new-project" },
+      ],
+    },
+    {
       type: "input",
       name: "projectName",
       message: "Project name:",
-      default: "project",
+      default: ".",
       validate: (input) => !!input.trim() || "Name cannot be empty",
     },
     // Package Manager
@@ -25,6 +35,7 @@ export const getPrompts = async () => {
         { name: chalk.green("bun") + "  (fastest)", value: "bun" },
       ],
       default: "npm",
+      when: (answers) => answers.action === "new-project",
     },
     {
       type: "list",
@@ -40,6 +51,32 @@ export const getPrompts = async () => {
           value: "fullstack"
         },
       ],
+      when: (answers) => answers.action === "new-project",
+    },
+    {
+      type: "confirm",
+      name: "addSkills",
+      message: "Add team skills & guidelines (code-review, git-workflow, etc.)?",
+      default: true,
+      when: (answers) => answers.action === "new-project",
+    },
+    {
+      type: "list",
+      name: "structureDoc",
+      message: "Choose architecture for structure.md:",
+      choices: [
+        { name: "None", value: "none" },
+        { name: chalk.yellow("Fullstack"), value: "fullstack" },
+        { name: chalk.cyan("Frontend"), value: "frontend" },
+        { name: chalk.red("Admin Panel"), value: "admin" },
+        { name: chalk.green("Backend"), value: "backend" },
+        { name: chalk.magenta("Telegram Bot"), value: "bot" },
+      ],
+      when: (answers) => answers.action === "new-project" || answers.action === "structure-only",
+      default: (answers) => {
+        if (answers.category === "telegram-bot") return "bot";
+        return answers.category || "frontend";
+      },
     },
     // Frontend & Admin Specific
     {
@@ -50,7 +87,7 @@ export const getPrompts = async () => {
         { name: chalk.cyan("React (Vite)"), value: "vite" },
         { name: chalk.magenta("Next.js (App Router)"), value: "next" },
       ],
-      when: (answers) => ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     // Backend Specific
     {
@@ -62,7 +99,7 @@ export const getPrompts = async () => {
         { name: chalk.blue("Fastify (Performance)"), value: "fastify" },
         { name: chalk.red("NestJS (Enterprise)"), value: "nestjs" },
       ],
-      when: (answers) => ["backend", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && ["backend", "fullstack"].includes(answers.category),
     },
     // Backend Language
     {
@@ -74,6 +111,7 @@ export const getPrompts = async () => {
         { name: chalk.blue("TypeScript"), value: "ts" },
       ],
       when: (answers) =>
+        answers.action === "new-project" &&
         ["backend", "fullstack"].includes(answers.category) &&
         answers.backendFramework !== "nestjs",
     },
@@ -87,7 +125,7 @@ export const getPrompts = async () => {
         { name: chalk.yellow("Telegraf (Popular)"), value: "telegraf" },
         { name: chalk.red("NTBA (Simple)"), value: "ntba" },
       ],
-      when: (answers) => answers.category === "telegram-bot",
+      when: (answers) => answers.action === "new-project" && answers.category === "telegram-bot",
     },
     // DB & Shared
     {
@@ -96,6 +134,7 @@ export const getPrompts = async () => {
       message: "Choose Database:",
       choices: ["None", "PostgreSQL", "MongoDB", "Supabase"],
       when: (answers) =>
+        answers.action === "new-project" &&
         ["backend", "telegram-bot", "fullstack"].includes(answers.category),
     },
     // Original Frontend & Admin Options
@@ -105,7 +144,7 @@ export const getPrompts = async () => {
       message: "Choose language:",
       choices: ["JavaScript", "TypeScript"],
       filter: (val) => (val.toLowerCase() === "typescript" ? "ts" : "js"),
-      when: (answers) => ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     {
       type: "list",
@@ -113,6 +152,7 @@ export const getPrompts = async () => {
       message: "UI Library:",
       choices: ["Tailwind CSS", "Chakra UI", "None"],
       when: (answers) =>
+        answers.action === "new-project" &&
         (answers.projectType === "vite" || answers.projectType === "next") &&
         ["frontend", "admin", "fullstack"].includes(answers.category),
     },
@@ -121,14 +161,14 @@ export const getPrompts = async () => {
       name: "auth",
       message: "Choose Authentication provider:",
       choices: ["None", "Clerk", "Supabase", "Firebase"],
-      when: (answers) => ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     {
       type: "confirm",
       name: "router",
       message: "Add React Router?",
       default: true,
-      when: (answers) => answers.projectType === "vite" && ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && answers.projectType === "vite" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     {
       type: "list",
@@ -136,7 +176,7 @@ export const getPrompts = async () => {
       message: "Choose Icon library:",
       choices: ["React Icons", "Lucide React", "None"],
       default: "React Icons",
-      when: (answers) => ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     {
       type: "list",
@@ -144,6 +184,7 @@ export const getPrompts = async () => {
       message: "Notification library:",
       choices: ["react-toastify", "sonner", "None"],
       when: (answers) =>
+        answers.action === "new-project" &&
         answers.projectType === "vite" && answers.uiLibrary !== "Chakra UI" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     {
@@ -151,14 +192,14 @@ export const getPrompts = async () => {
       name: "stateManagement",
       message: "Add Zustand for state management?",
       default: false,
-      when: (answers) => answers.projectType === "vite" && ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && answers.projectType === "vite" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     {
       type: "confirm",
       name: "axios",
       message: "Add Axios for API requests?",
       default: true,
-      when: (answers) => ["frontend", "admin", "fullstack"].includes(answers.category),
+      when: (answers) => answers.action === "new-project" && ["frontend", "admin", "fullstack"].includes(answers.category),
     },
     // Linting & Formatting
     {
@@ -166,29 +207,7 @@ export const getPrompts = async () => {
       name: "linting",
       message: "Add ESLint + Prettier?",
       default: true,
-    },
-    {
-      type: "confirm",
-      name: "addSkills",
-      message: "Add team skills & guidelines (code-review, git-workflow, etc.)?",
-      default: true,
-    },
-    {
-      type: "list",
-      name: "structureDoc",
-      message: "Add project architecture documentation (structure.md)?",
-      choices: [
-        { name: "None", value: "none" },
-        { name: chalk.yellow("Fullstack"), value: "fullstack" },
-        { name: chalk.cyan("Frontend"), value: "frontend" },
-        { name: chalk.red("Admin Panel"), value: "admin" },
-        { name: chalk.green("Backend"), value: "backend" },
-        { name: chalk.magenta("Telegram Bot"), value: "bot" },
-      ],
-      default: (answers) => {
-        if (answers.category === "telegram-bot") return "bot";
-        return answers.category;
-      },
+      when: (answers) => answers.action === "new-project",
     },
   ]);
 };

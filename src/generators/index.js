@@ -45,6 +45,19 @@ export class ProjectGenerator {
 
     this.options.installPath = projectPath;
 
+    if (this.options.action === "skills-only") {
+      await this.addSkillsGuidelines();
+      console.log(chalk.green.bold(`\n✔ Skills & Guidelines added to '${this.options.projectName}' successfully.`));
+      return;
+    }
+
+    if (this.options.action === "structure-only") {
+      if (this.options.structureDoc && this.options.structureDoc !== "none") {
+        await this.generateStructureMd();
+      }
+      console.log(chalk.green.bold(`\n✔ structure.md added to '${this.options.projectName}' successfully.`));
+      return;
+    }
 
     const { category } = this.options;
 
@@ -189,8 +202,9 @@ export class ProjectGenerator {
     content = structures[type] || "";
 
     if (content) {
-      await fs.writeFile(path.join(projectPath, "structure.md"), content);
-      console.log(chalk.cyan(`\n📝 Created structure.md with ${type.toUpperCase()} architecture.`));
+      const fileName = type === "bot" ? "telegram-bot.md" : `${type}.md`;
+      await fs.writeFile(path.join(projectPath, fileName), content);
+      console.log(chalk.cyan(`\n📝 Created ${fileName} with ${type.toUpperCase()} architecture.`));
     }
   }
 
