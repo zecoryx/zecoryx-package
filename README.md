@@ -1,60 +1,50 @@
-# Zecoryx CLI
+# Zecoryx CLI — Refactored
 
-A professional project generator designed for modern web development. This tool scaffolds high-quality project structures following industry best practices like Clean Architecture and Feature-Driven Design.
+## Project Essence
 
-## Core Features
+Zecoryx CLI is a professional-grade project generator designed to automate the scaffolding of modern web applications, backend services, and Telegram bots. It eliminates the repetitive setup work by providing battle-tested templates and a streamlined CLI experience.
 
-- **Standardized Architectures:** Automatically generates `structure.md` to document the chosen project layout.
-- **Frontend & Admin:** Feature-based modular structure for React and Next.js applications.
-- **Backend:** Layered Clean Architecture for Express and Fastify (Node.js).
-- **Telegram Bots:** Modular event-driven structure for grammY, Telegraf, and NTBA.
-- **Fullstack Monorepo:** Integrated Frontend and Backend with a shared utility layer and Docker support.
-- **Team Handbook:** Optional `skills/` directory with guidelines for Code Reviews, Git Workflows, and Naming Conventions.
-- **SEO Optimized:** Frontend templates achieve 100% SEO scores in Lighthouse audits.
+## Architecture Deep Dive
 
-## Project Categories
+The codebase has been refactored into a **Layered Architecture** combined with the **Repository Pattern**. This separation of concerns ensures that each part of the system has a single responsibility:
 
-### 1. Frontend & Admin Panel
-Uses a **Feature-Based Structure** inspired by Bulletproof React.
-- `src/features/`: Self-contained modules (auth, dashboard, etc.) with their own API, components, and hooks.
-- `src/components/`: Shared global UI components.
-- `src/layouts/`: Reusable page wrappers.
+- **Controllers:** The `CliController` handles all user interactions and CLI logic. It is responsible for parsing input and displaying feedback, delegating all business logic to the service layer.
+- **Services:** The `GeneratorService` contains the core business rules. It validates directory states, orchestrates the generation process, and manages the flow of data between the controller and the repository.
+- **Repositories:** The `FsRepository` serves as the data access layer. It abstracts all file system operations, shell executions (like Git and Package Managers), and template reading. This makes the system more testable and easier to migrate to different storage solutions if needed.
+- **Config & Constants:** All application-wide settings and magic strings are centralized in `config/` and `constants.js`, ensuring consistency and making the system easier to configure.
 
-### 2. Backend API
-Follows a **Standard Layered Structure**.
-- `src/controllers/`: Request and response handling.
-- `src/services/`: Core business logic.
-- `src/models/`: Data schemas and types.
-- `src/routes/`: API endpoint definitions.
+## Tech Stack & Rationale
 
-### 3. Telegram Bot
-A **Modular Structure** for scalable bot development.
-- `handlers/`: Command and message logic.
-- `keyboards/`: Interface components.
-- `middlewares/`: Request processing layers.
+- **Node.js:** The primary runtime for its vast ecosystem and ease of use in CLI tools.
+- **Chalk & Figlet:** Chosen for providing a high-quality, professional visual experience in the terminal.
+- **fs-extra:** Used for simplified and robust file system operations over the native `fs` module.
+- **execa:** Provides a powerful and safe way to execute shell commands like `git init` and `npm install`.
+- **Inquirer/Prompts:** (via `prompts.js`) Facilitates an interactive and intuitive user experience.
 
-### 4. Fullstack
-A **Monorepo** approach for seamless development.
-- `client/`: Frontend application.
-- `server/`: Backend API.
-- `shared/`: Shared TypeScript types and validation schemas.
-- `docker-compose.yml`: Local orchestration setup.
+## Core Logic Flow
 
-## Getting Started
+1. **Startup:** `main.js` initializes the dependency tree (Repo -> Service -> Controller).
+2. **Input:** `CliController` triggers the interactive prompts to gather project requirements.
+3. **Validation:** `GeneratorService` validates the destination directory and input parameters.
+4. **Execution:** `GeneratorService` orchestrates the creation of the project structure, copying templates, and initializing tools like Git.
+5. **Data Persistence:** `FsRepository` performs the actual file writes and shell commands.
+6. **Completion:** `CliController` displays a success message with follow-up instructions.
 
-Generate a new project using npx:
+## Edge Case Handling
 
-```bash
-npx zecoryx-tools
-```
+- **Empty Directory Check:** The system prevents overwriting non-empty directories to avoid data loss.
+- **Paranoid Error Handling:** Every layer is wrapped in `try-catch` blocks with descriptive error messages.
+- **Resource Existence:** Templates and destination paths are verified before any operation is attempted.
+- **Git Failures:** Git initialization is handled gracefully; if Git is not installed, the process continues without crashing.
+- **Async Safety:** `Promise.all()` is used for independent operations (like copying multiple skill files) to maximize performance.
 
-Follow the interactive prompts to configure your project name, framework, and additional features like linting or team guidelines.
+## Future Scalability
 
-## Architecture Documentation
+- **Plugin System:** The service-oriented architecture allows for easy addition of new project templates as plugins.
+- **Remote Templates:** The `FsRepository` can be extended to fetch templates from remote repositories (GitHub/S3) instead of local files.
+- **Telemetry:** A new service layer can be added to track usage and gather feedback for further improvements.
+- **Enhanced Validation:** Integration of schema-based validation for configuration files.
 
-Each project includes a `structure.md` file that explains the specific folder hierarchy and the purpose of each directory, ensuring new team members can onboard quickly.
+---
 
-## Author
-
-Lazizbek Abdullayev (Zecoryx)
-[Portfolio](https://zecoryx.uz) | [Telegram](https://t.me/zecoryx)
+_Built with by (zecoryx)_

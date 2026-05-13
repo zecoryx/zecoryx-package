@@ -1,31 +1,21 @@
-import chalk from "chalk";
-import figlet from "figlet";
 import updateNotifier from "update-notifier";
-import fs from "fs-extra";
-import path from "path";
-import { fileURLToPath } from "url";
-import { getPrompts } from "./prompts.js";
-import { ProjectGenerator } from "./generators/index.js";
+import { config } from "./config/index.js";
+import { FsRepository } from "./repositories/fs.repository.js";
+import { GeneratorService } from "./services/generator.service.js";
+import { CliController } from "./controllers/cli.controller.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const pkg = fs.readJsonSync(path.join(__dirname, "../package.json"));
-
+/**
+ * Main application entry point
+ */
 export async function main() {
   // Update checker
-  updateNotifier({ pkg }).notify();
+  updateNotifier({ pkg: config.pkg }).notify();
 
-  // Minimal Startup
-  console.clear();
-  console.log(chalk.bold(`\n⚡ Zecoryx CLI v${pkg.version}`));
-  console.log(chalk.gray("Professional project generator\n"));
+  // Initialize dependencies
+  const fsRepo = new FsRepository();
+  const generatorService = new GeneratorService(fsRepo);
+  const cliController = new CliController(generatorService);
 
-  try {
-    const answers = await getPrompts();
-    const generator = new ProjectGenerator(answers);
-    await generator.init();
-  } catch (error) {
-    console.error(chalk.red("\nError:"), error);
-    process.exit(1);
-  }
+  // Run the application
+  await cliController.start();
 }
